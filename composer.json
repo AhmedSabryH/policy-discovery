@@ -1,0 +1,30 @@
+{
+    "name": "mud-qadm/policy-discovery",
+    "description": "Laravel package for recursive policy auto discovery supporting modular architecture",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "MudQadm\\PolicyDiscovery\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "MudQadm\\PolicyDiscovery\\PolicyDiscoveryServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10.0 || ^11.0 || ^12.0 || ^13.0",
+        "symfony/finder": "^6.0 || ^7.0"
+    },
+    "authors": [
+        {
+            "name": "AhmedSabryH",
+            "email": "as0162121@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
