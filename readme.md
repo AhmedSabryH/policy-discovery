@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/mud-qadm/policy-discovery.svg?style=flat-square)](https://packagist.org/packages/mud-qadm/policy-discovery)
 [![Total Downloads](https://img.shields.io/packagist/dt/mud-qadm/policy-discovery.svg?style=flat-square)](https://packagist.org/packages/mud-qadm/policy-discovery)
 [![PHP Version](https://img.shields.io/packagist/php-v/mud-qadm/policy-discovery.svg?style=flat-square)](https://packagist.org/packages/mud-qadm/policy-discovery)
-[![Laravel Version](https://img.shields.io/badge/Laravel-10.x%20%7C%2011.x%20%7C%2012.x-blue?style=flat-square)](https://laravel.com)
+[![Laravel Version](https://img.shields.io/badge/Laravel-10.x%20%7C%2011.x%20%7C%2012.x%20%7C%2013.x-blue?style=flat-square)](https://laravel.com)
 [![License](https://img.shields.io/packagist/l/mud-qadm/policy-discovery.svg?style=flat-square)](https://packagist.org/packages/mud-qadm/policy-discovery)
 
 Automatically discover and register Laravel policies recursively – even in deeply nested directories or modular domain structures.
