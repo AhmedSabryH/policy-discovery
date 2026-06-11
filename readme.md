@@ -17,8 +17,8 @@ Automatically discover and register Laravel policies recursively – even in dee
 - [Installation](#-installation)
 - [Configuration](#-configuration)
 - [Usage](#-usage)
-- [Artisan Commands](#-artisan-commands)
-- [How It Works](#-how-it-works)
+- [Artisan Commands](#artisan-commands)
+- [How It Works](#how-it-works)
 - [Caching & Performance](#-caching--performance)
 - [Troubleshooting](#-troubleshooting)
 - [License](#-license)
@@ -78,6 +78,7 @@ This package recursively scans any number of policy directories, automatically m
 | **CLI tools** | List, validate, warmup, clear, rebuild, and optimise caches |
 | **Export mappings** | Export discovered policy–model mappings to JSON |
 | **Diagnostics** | Statistics and validation commands to ensure correct setup |
+| **Automatic policy detection** | Newly created policies are discovered automatically without manual registration |
 
 ---
 
@@ -212,6 +213,7 @@ No additional service provider code or manual `Gate::policy()` calls are needed.
 
 ---
 
+<a id="artisan-commands"></a>
 ## 🛠️ Artisan Commands
 
 | Command | Description |
@@ -227,57 +229,77 @@ No additional service provider code or manual `Gate::policy()` calls are needed.
 
 ---
 
+<a id="how-it-works"></a>
 ## ⚙️ How It Works
 
-1. **Scanning** – On the first request (or when cache is empty), the package recursively scans the configured directories for PHP files ending with `*Policy.php`.
-2. **Model Inference** – For each policy, it attempts to locate the corresponding model:
-   - Uses the `@model` annotation in the policy docblock if present.
-   - Falls back to naming convention: `RolePolicy` → `Role` (applies `App\Models` namespace).
-   
-   ### 🎯 Explicit Policy Mapping (Attributes)
+1. **Scanning** – On the first request (or when the cache is empty), the package recursively scans the configured directories for PHP files ending with `*Policy.php`.
 
-   You can explicitly define which models a policy belongs to using PHP Attributes:
+2. **Model Resolution** – For each discovered policy, the package determines the target model using the following strategies (in order):
 
-   ```php
-   #[PolicyFor(User::class)]
-   class UserPolicy
-   {
-   }
-3. **Registration** – Each discovered pair `[model_class => policy_class]` is registered with `Gate::policy()`.
-4. **Caching** – The mapping array is stored in Laravel's cache (file by default) to avoid filesystem overhead on subsequent requests.
+   * **PHP Attributes** using `#[PolicyFor(...)]`
+   * **DocBlock annotations** using `@model`
+   * **Naming conventions** (`RolePolicy` → `Role`)
 
-You can override the default model namespace or mapping logic via the configuration file.
+### 🎯 Explicit Policy Mapping (Attributes)
+
+You can explicitly define which model a policy belongs to using PHP Attributes:
+
+```php
+use MudQadm\PolicyDiscovery\Attributes\PolicyFor;
+
+#[PolicyFor(User::class)]
+class UserPolicy
+{
+    //
+}
+```
+
+This is especially useful when the policy name does not directly match the model name or when working with custom domain structures.
+
+3. **Registration** – Each discovered policy–model pair is automatically registered with Laravel's Gate using `Gate::policy()`.
+
+4. **Caching** – Discovered mappings are cached to avoid unnecessary filesystem scans and improve performance.
+
+5. **Automatic Refresh** – When a new policy is generated using:
+
+```bash
+php artisan make:policy
+```
+
+the package automatically refreshes its mappings, ensuring the newly created policy is available without requiring manual cache rebuilds.
+
+You can customise the discovery paths, namespaces, and mapping behaviour through the configuration file.
 
 ---
 
 ## 🧠 Caching & Performance
 
-- The cache is **file‑based by default** but you can switch to any Laravel-supported cache driver (Redis, Memcached, etc.).
-- Cache is automatically invalidated when policy files are added, removed, or modified – thanks to file‑timestamp tracking.
-- In production, run `php artisan policy-discovery:warmup` after deployments to pre‑fill the cache.
-- Run `php artisan policy-discovery:optimize` to compress/sort the mapping array for minimal memory usage.
+* Policy mappings are cached to minimise filesystem operations.
+* Cache is automatically invalidated when policy files are added, removed, or modified.
+* Newly generated policies are detected automatically and included in the mapping cache.
+* In production, you may run `php artisan policy-discovery:warmup` after deployment to pre-build the cache.
+* Run `php artisan policy-discovery:optimize` to optimise the cached mapping structure.
 
-> ⚠️ If you add or rename a policy in production without clearing the cache, the package will detect the change and automatically rebuild the cache on the next request. No manual action is required.
+> ⚠️ Policy Discovery automatically keeps its cache in sync with policy changes, so manual cache rebuilding is rarely required.
 
 ---
 
 ## 🔍 Troubleshooting
 
-| Issue | Likely solution |
-|-------|----------------|
-| Policy not discovered | – Ensure the policy filename ends with `Policy.php`.<br>– Check that its directory is included in `config/policy-discovery.paths`.<br>– Run `php artisan policy-discovery:check` for diagnostics. |
-| Model not found / mapped incorrectly | – Add `@model App\Models\YourModel` to the policy docblock.<br>– Adjust the default model namespace in config. |
-| Cache not updating | – Run `php artisan policy-discovery:rebuild`.<br>– Check cache permissions if using file driver. |
-| Performance issues in development | – Disable caching during development by setting `cache_ttl` to `0` in the config. |
+| Issue                                 | Solution                                                                                                                          |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Policy not discovered                 | Ensure the file name ends with `Policy.php`, verify the configured discovery paths, and run `php artisan policy-discovery:check`. |
+| Model mapped incorrectly              | Use the `#[PolicyFor(...)]` attribute or add an `@model` annotation.                                                              |
+| Cache appears outdated                | Run `php artisan policy-discovery:rebuild` and verify cache directory permissions.                                                |
+| Performance issues during development | Disable caching or clear the cache frequently while iterating.                                                                    |
 
-For additional help, open an issue on [GitHub](https://github.com/AhmedSabryH/policy-discovery/issues).
+For additional help, open an issue on GitHub.
 
 ---
 
 ## 📄 License
 
-The MIT License (MIT). Please see the [LICENSE](LICENSE) file for more information.
+The MIT License (MIT). See the LICENSE file for details.
 
 ---
-
-**Created & maintained by [Ahmed Sabry](https://github.com/AhmedSabryH)**
+**Created & maintained by [Ahmed Sabry Hagrs](https://github.com/AhmedSabryH)**
