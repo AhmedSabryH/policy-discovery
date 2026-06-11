@@ -44,4 +44,11 @@ return [
     |--------------------------------------------------------------------------
     */
     'cache_file' => storage_path('policy-discovery/mapping.json'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Automatically rebuild cache on miss
+    |--------------------------------------------------------------------------
+    */
+    'auto_rebuild' => env('POLICY_DISCOVERY_AUTO_REBUILD', true),
 ];

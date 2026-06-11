@@ -75,7 +75,12 @@ class PolicyRegistrar
             File::makeDirectory($directory, 0755, true);
         }
 
-        $json = json_encode($mapping, JSON_PRETTY_PRINT);
+        $data = [
+            'signature' => $this->getPoliciesSignature(),
+            'mapping' => $mapping,
+        ];
+
+        $json = json_encode($data, JSON_PRETTY_PRINT);
 
         if ($compressed) {
             $json = gzencode($json, 6);
@@ -107,9 +112,21 @@ class PolicyRegistrar
             $content = $decompressed;
         }
 
-        $mapping = json_decode($content, true);
+        $data = json_decode($content, true);
+        if (!is_array($data) || !isset($data['mapping'], $data['signature'])) {
+            return null;
+        }
 
-        return is_array($mapping) ? $mapping : null;
+        if (!config('policy-discovery.auto_rebuild', true)) {
+            return $data['mapping'];
+        }
+
+        $currentSignature = $this->getPoliciesSignature();
+        if ($currentSignature !== $data['signature']) {
+            return null;
+        }
+
+        return $data['mapping'];
     }
 
     public function clearCache(): void
@@ -214,6 +231,26 @@ class PolicyRegistrar
         }
 
         return $stats;
+    }
+
+    /**
+     * Generate a signature (hash) representing the current state of all policy files.
+     * Used to detect changes without scanning all files every time.
+     */
+    protected function getPoliciesSignature(): string
+    {
+        $policyDir = config('policy-discovery.policy_directory', app_path('Policies'));
+        if (!is_dir($policyDir)) {
+            return md5('');
+        }
+
+        $finder = Finder::create()->files()->in($policyDir)->name('*Policy.php');
+        $timestamps = [];
+        foreach ($finder as $file) {
+            $timestamps[] = $file->getMTime() . ':' . $file->getRealPath();
+        }
+        sort($timestamps); // ensure consistent order
+        return md5(implode('|', $timestamps));
     }
 
     protected function getClassFromFile(\SplFileInfo $file, string $baseDir): ?string
